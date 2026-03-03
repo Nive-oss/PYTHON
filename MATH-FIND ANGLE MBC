@@ -1,0 +1,12 @@
+import math
+
+def calculate_angle():
+    ab = int(input())
+    bc = int(input())
+    angle_radians = math.atan2(ab, bc)
+    angle_degrees = math.degrees(angle_radians)
+    result = round(angle_degrees)
+    print(f"{result}{chr(176)}")
+
+if __name__ == '__main__':
+    calculate_angle()
