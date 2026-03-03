@@ -1,0 +1,8 @@
+m_size = int(input())
+set_a = set(map(int, input().split()))
+n_size = int(input())
+set_b = set(map(int, input().split()))
+diff = set_a.symmetric_difference(set_b)
+sorted_diff = sorted(list(diff))
+for number in sorted_diff:
+    print(number)
