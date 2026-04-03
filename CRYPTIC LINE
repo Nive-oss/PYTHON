@@ -1,0 +1,70 @@
+import sys
+
+def solve():
+    # Read n and q from standard input
+    input_data = sys.stdin.read().split()
+    if not input_data:
+        return
+    
+    it = iter(input_data)
+    n = int(next(it))
+    q = int(next(it))
+    
+    # Use a directed adjacency list to represent parent -> child
+    adj = [[] for _ in range(n + 1)]
+    
+    # A tree with n nodes always has n-1 ancestral connections
+    for _ in range(n - 1):
+        try:
+            u = int(next(it))
+            v = int(next(it))
+            adj[u].append(v)
+        except StopIteration:
+            break
+            
+    tin = [0] * (n + 1)
+    tout = [0] * (n + 1)
+    timer = 0
+    
+    # Iterative DFS to avoid RecursionLimit and Compilation Errors
+    # Stack stores (node, child_index)
+    stack = [(1, 0)]
+    timer += 1
+    tin[1] = timer
+    
+    while stack:
+        u, child_idx = stack[-1]
+        
+        if child_idx < len(adj[u]):
+            v = adj[u][child_idx]
+            # Update current node's next child index
+            stack[-1] = (u, child_idx + 1)
+            
+            # Visit the child
+            timer += 1
+            tin[v] = timer
+            stack.append((v, 0))
+        else:
+            # Finished all children of u
+            tout[u] = timer
+            stack.pop()
+
+    # Process each query
+    output = []
+    for _ in range(q):
+        try:
+            u = int(next(it))
+            v = int(next(it))
+            # u is an ancestor of v if v's entry time is within u's interval
+            if tin[u] <= tin[v] and tout[u] >= tout[v]:
+                output.append("YES")
+            else:
+                output.append("NO")
+        except StopIteration:
+            break
+            
+    # Print all results at once for faster output
+    sys.stdout.write("\n".join(output) + "\n")
+
+if __name__ == "__main__":
+    solve()
