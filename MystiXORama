@@ -1,0 +1,82 @@
+import sys
+import math
+
+def solve():
+    # Use fast I/O for large query sets
+    input_data = sys.stdin.read().split()
+    if not input_data:
+        return
+    
+    ptr = 0
+    t = int(input_data[ptr])
+    ptr += 1
+    
+    for _ in range(t):
+        n = int(input_data[ptr])
+        ptr += 1
+        arr = list(map(int, input_data[ptr : ptr + n]))
+        ptr += n
+        q = int(input_data[ptr])
+        ptr += 1
+        
+        # Block size for Mo's Algorithm optimization
+        block_size = int(math.sqrt(n)) or 1
+        queries = []
+        for i in range(q):
+            l = int(input_data[ptr]) - 1
+            r = int(input_data[ptr + 1]) - 1
+            x = int(input_data[ptr + 2])
+            y = int(input_data[ptr + 3])
+            queries.append((l, r, x, y, i))
+            ptr += 4
+            
+        # Sort queries using Mo's order (hilbert curve or block sorting)
+        queries.sort(key=lambda q: (q[0] // block_size, q[1] if (q[0] // block_size) % 2 == 0 else -q[1]))
+        
+        # Track frequencies and current XOR sums for each frequency
+        counts = [0] * (max(arr + [0]) + 1)
+        # xor_sums[f] = XOR sum of all numbers appearing exactly 'f' times
+        xor_sums = [0] * (n + 1)
+        
+        def add(val):
+            c = counts[val]
+            xor_sums[c] ^= val
+            counts[val] += 1
+            xor_sums[c + 1] ^= val
+            
+        def remove(val):
+            c = counts[val]
+            xor_sums[c] ^= val
+            counts[val] -= 1
+            xor_sums[c - 1] ^= val
+            
+        ans = [0] * q
+        cur_l, cur_r = 0, -1
+        
+        for l, r, x, y, i in queries:
+            # Move Mo's pointers
+            while cur_r < r:
+                cur_r += 1
+                add(arr[cur_r])
+            while cur_l > l:
+                cur_l -= 1
+                add(arr[cur_l])
+            while cur_r > r:
+                remove(arr[cur_r])
+                cur_r -= 1
+            while cur_l < l:
+                remove(arr[cur_l])
+                cur_l += 1
+            
+            # The result is the sum of XOR sums in range [x, y]
+            res = 0
+            limit_y = min(y, n)
+            # Iterating x to y is efficient because total sum of frequencies is N
+            for freq in range(x, limit_y + 1):
+                res += xor_sums[freq]
+            ans[i] = res
+            
+        sys.stdout.write("\n".join(map(str, ans)) + "\n")
+
+if __name__ == "__main__":
+    solve()
