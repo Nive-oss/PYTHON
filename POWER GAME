@@ -1,0 +1,75 @@
+import sys
+
+def solve():
+    # Use fast I/O to read N, M, and the powers
+    data = sys.stdin.read().split()
+    if not data:
+        return
+    
+    N = int(data[0])
+    M = int(data[1])
+    
+    # Bridge powers
+    powers = list(map(int, data[2 : 2 + M]))
+    
+    # Build adjacency list with (neighbor, edge_power, edge_id)
+    adj = [[] for _ in range(N + 1)]
+    ptr = 2 + M
+    for i in range(M):
+        u = int(data[ptr])
+        v = int(data[ptr + 1])
+        p = powers[i]
+        adj[u].append([v, p, i])
+        adj[v].append([u, p, i])
+        ptr += 2
+
+    # Bridge finding variables
+    tin = [-1] * (N + 1)
+    low = [-1] * (N + 1)
+    timer = [0]
+    bridge_powers = []
+
+    # Iterative DFS to find bridges (prevents recursion depth issues)
+    for i in range(1, N + 1):
+        if tin[i] == -1:
+            stack = [(i, -1, -1)] # (node, parent, edge_id)
+            while stack:
+                u, p, eid = stack[-1]
+                if tin[u] == -1:
+                    tin[u] = low[u] = timer[0]
+                    timer[0] += 1
+                
+                found_child = False
+                for j in range(len(adj[u])):
+                    v, power, edge_id = adj[u][j]
+                    if edge_id == eid:
+                        continue
+                    if tin[v] != -1:
+                        low[u] = min(low[u], tin[v])
+                    else:
+                        # Replace child in adj to track progress
+                        adj[u].pop(j)
+                        stack.append((v, u, edge_id))
+                        found_child = True
+                        break
+                
+                if not found_child:
+                    stack.pop()
+                    if p != -1:
+                        low[p] = min(low[p], low[u])
+                        # If low[u] > tin[p], the edge (p, u) is a bridge
+                        if low[u] > tin[p]:
+                            # Find the power of the edge connecting p and u
+                            # In this specific problem, we pass 'eid' in the stack
+                            bridge_powers.append(powers[eid])
+
+    # Sort bridges in descending order for optimal play
+    bridge_powers.sort(reverse=True)
+    
+    max_score_first = sum(bridge_powers[0::2])  # Sam picks 1st, 3rd, 5th...
+    min_score_second = sum(bridge_powers[1::2]) # Sam picks 2nd, 4th, 6th...
+
+    print(str(max_score_first) + " " + str(min_score_second))
+
+if __name__ == "__main__":
+    solve()
