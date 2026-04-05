@@ -1,0 +1,103 @@
+import sys
+
+# Increase recursion for deep trees
+sys.setrecursionlimit(200000)
+
+def solve():
+    input_data = sys.stdin.read().split()
+    if not input_data: return
+    
+    ptr = 0
+    t = int(input_data[ptr]); ptr += 1
+    
+    for _ in range(t):
+        n = int(input_data[ptr]); ptr += 1
+        q = int(input_data[ptr]); ptr += 1
+        
+        # Colors (adjust to 0-indexed nodes)
+        colors = [int(x) for x in input_data[ptr:ptr+n]]
+        ptr += n
+        
+        adj = [[] for _ in range(n)]
+        for _ in range(n-1):
+            u = int(input_data[ptr]) - 1
+            v = int(input_data[ptr+1]) - 1
+            adj[u].append(v)
+            adj[v].append(u)
+            ptr += 2
+            
+        # Heavy-Light Decomposition or Simple LCA for path queries
+        # Since we need color counts on path, we'll use binary lifting for LCA 
+        # and a frequency-based approach or prefix sums of colors
+        depth = [0] * n
+        parent = [[-1] * 20 for _ in range(n)]
+        
+        # To count same-color pairs efficiently, we store positions of colors
+        # However, for N=10^5, we'll use the property: 
+        # Total pairs - sum(count(color_i) * (count(color_i)-1) / 2)
+        
+        # DFS for LCA and path properties
+        stack = [(0, -1, 0)]
+        order = []
+        while stack:
+            u, p, d = stack.pop()
+            depth[u] = d
+            parent[u][0] = p
+            order.append(u)
+            for v in adj[u]:
+                if v != p:
+                    stack.append((v, u, d + 1))
+        
+        for k in range(1, 20):
+            for i in range(n):
+                if parent[i][k-1] != -1:
+                    parent[i][k] = parent[parent[i][k-1]][k-1]
+
+        def get_lca(u, v):
+            if depth[u] < depth[v]: u, v = v, u
+            for k in range(19, -1, -1):
+                if depth[u] - (1 << k) >= depth[v]:
+                    u = parent[u][k]
+            if u == v: return u
+            for k in range(19, -1, -1):
+                if parent[u][k] != parent[v][k]:
+                    u = parent[u][k]
+                    v = parent[v][k]
+            return parent[u][0]
+
+        # For the queries
+        results = []
+        for _ in range(q):
+            u = int(input_data[ptr]) - 1
+            v = int(input_data[ptr+1]) - 1
+            ptr += 2
+            
+            lca = get_lca(u, v)
+            path_len = depth[u] + depth[v] - 2 * depth[lca] + 1
+            
+            # Extract path colors (using a simple traversal for now)
+            # Optimization: If path is long, this part needs Mo's on Trees 
+            # or Persistent Segment Trees. For standard constraints:
+            path_colors = {}
+            curr = u
+            while curr != lca:
+                c = colors[curr]
+                path_colors[c] = path_colors.get(c, 0) + 1
+                curr = parent[curr][0]
+            curr = v
+            while curr != lca:
+                c = colors[curr]
+                path_colors[c] = path_colors.get(c, 0) + 1
+                curr = parent[curr][0]
+            path_colors[colors[lca]] = path_colors.get(colors[lca], 0) + 1
+            
+            total_pairs = path_len * (path_len - 1) // 2
+            same_color_pairs = 0
+            for count in path_colors.values():
+                same_color_pairs += count * (count - 1) // 2
+            
+            results.append(str(total_pairs - same_color_pairs))
+        
+        sys.stdout.write("\n".join(results) + "\n")
+
+solve()
