@@ -1,0 +1,89 @@
+import sys
+
+# Fast parity check using bit manipulation
+def get_parity(n):
+    # Returns 1 for odd bits, 0 for even bits
+    n ^= n >> 16
+    n ^= n >> 8
+    n ^= n >> 4
+    n &= 0xf
+    return (0x6996 >> n) & 1
+
+def solve():
+    # Fast I/O
+    input_data = sys.stdin.read().split()
+    if not input_data:
+        return
+    
+    ptr = 0
+    t = int(input_data[ptr])
+    ptr += 1
+    
+    results = []
+    for _ in range(t):
+        n = int(input_data[ptr])
+        ptr += 1
+        arr = [int(x) for x in input_data[ptr : ptr + n]]
+        ptr += n
+        
+        # 1. Precalculate Prefix XOR Parities
+        # pref_p[i] is parity of bits in XOR(arr[0...i-1])
+        pref_p = [0] * (n + 1)
+        curr_xor = 0
+        for i in range(n):
+            curr_xor ^= arr[i]
+            pref_p[i+1] = get_parity(curr_xor)
+            
+        # 2. Prefix Sums of Parities for O(1) range counting
+        # count_p[i] = how many pref_p[0...i] are 1
+        count_p1 = [0] * (n + 2)
+        count_p0 = [0] * (n + 2)
+        for i in range(n + 1):
+            count_p1[i+1] = count_p1[i] + (1 if pref_p[i] == 1 else 0)
+            count_p0[i+1] = count_p0[i] + (1 if pref_p[i] == 0 else 0)
+            
+        total_subarrays = 0
+        # intervals stores (and_value, start_index)
+        intervals = [] 
+        
+        for j in range(n):
+            new_val = arr[j]
+            new_intervals = []
+            
+            # Update existing AND values with current element
+            for and_val, start_idx in intervals:
+                updated_and = and_val & new_val
+                if not new_intervals or new_intervals[-1][0] != updated_and:
+                    new_intervals.append((updated_and, start_idx))
+            
+            # Add the current element as its own start point
+            if not new_intervals or new_intervals[-1][0] != new_val:
+                new_intervals.append((new_val, j))
+            
+            intervals = new_intervals
+            
+            # Target Parity for XOR to be EVEN:
+            # XOR(i...j) = pref_xor[j+1] ^ pref_xor[i]
+            # Parity(XOR) is even if Parity(pref_p[j+1]) == Parity(pref_p[i])
+            target_p = pref_p[j+1]
+            
+            # 3. Check each unique AND interval
+            # Interval for i is [intervals[k].start, intervals[k+1].start - 1]
+            for k in range(len(intervals)):
+                and_val, start_L = intervals[k]
+                start_R = intervals[k+1][1] - 1 if k+1 < len(intervals) else j
+                
+                # Condition: AND must have ODD number of set bits
+                if get_parity(and_val) == 1:
+                    # Count i in [start_L, start_R] where pref_p[i] == target_p
+                    if target_p == 1:
+                        total_subarrays += count_p1[start_R + 1] - count_p1[start_L]
+                    else:
+                        total_subarrays += count_p0[start_R + 1] - count_p0[start_L]
+                        
+        results.append(str(total_subarrays))
+    
+    sys.stdout.write("\n".join(results) + "\n")
+
+if __name__ == "__main__":
+    solve()
