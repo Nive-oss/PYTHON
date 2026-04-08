@@ -1,0 +1,25 @@
+from collections import defaultdict
+
+class Solution:
+    def findItinerary(self, tickets):
+        # 1. Build an adjacency list with destinations sorted in reverse 
+        # so we can pop the smallest destination from the end in O(1)
+        graph = defaultdict(list)
+        for src, dst in sorted(tickets, reverse=True):
+            graph[src].append(dst)
+            
+        itinerary = []
+        
+        # 2. Use DFS to find the Eulerian path
+        def dfs(airport):
+            while graph[airport]:
+                # Always take the lexicographically smallest destination
+                next_dest = graph[airport].pop()
+                dfs(next_dest)
+            # Add to itinerary in post-order (reverse)
+            itinerary.append(airport)
+            
+        dfs("JFK")
+        
+        # 3. Return the itinerary in correct order
+        return itinerary[::-1]
