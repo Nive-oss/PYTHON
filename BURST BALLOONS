@@ -1,0 +1,23 @@
+class Solution:
+    def maxCoins(self, nums):
+        # Add boundary balloons with value 1
+        arr = [1] + [x for x in nums if x > 0] + [1]
+        n = len(arr)
+        
+        # dp[i][j] will store the max coins for the range (i, j)
+        dp = [[0] * n for _ in range(n)]
+
+        # k is the length of the range we are looking at
+        for k in range(2, n):
+            # i is the left boundary
+            for i in range(n - k):
+                # j is the right boundary
+                j = i + k
+                # Try every balloon 'm' as the LAST one to burst in range (i, j)
+                for m in range(i + 1, j):
+                    coins = arr[i] * arr[m] * arr[j]
+                    total = coins + dp[i][m] + dp[m][j]
+                    if total > dp[i][j]:
+                        dp[i][j] = total
+                        
+        return dp[0][n - 1]
