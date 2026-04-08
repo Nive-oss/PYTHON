@@ -1,0 +1,39 @@
+class Solution:
+    def removeInvalidParentheses(self, s):
+        # Helper function to check if a string is valid
+        def is_valid(string):
+            count = 0
+            for char in string:
+                if char == '(':
+                    count += 1
+                elif char == ')':
+                    count -= 1
+                    if count < 0:
+                        return False
+            return count == 0
+
+        # BFS approach
+        queue = {s}  # Start with the original string
+        while queue:
+            # Check all strings in the current level
+            valid_results = []
+            for item in queue:
+                if is_valid(item):
+                    valid_results.append(item)
+            
+            # If we found valid strings, they are the ones with minimum removals
+            if valid_results:
+                return valid_results
+            
+            # If no valid strings yet, generate the next level by removing one parenthesis
+            next_queue = set()
+            for item in queue:
+                for i in range(len(item)):
+                    if item[i] in '()':
+                        # Create a new string by skipping character at index i
+                        new_s = item[:i] + item[i+1:]
+                        next_queue.add(new_s)
+            queue = next_queue
+            
+        return [""]
+
