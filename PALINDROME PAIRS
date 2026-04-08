@@ -1,0 +1,25 @@
+class Solution:
+    def palindromePairs(self, words):
+        word_map = {word: i for i, word in enumerate(words)}
+        results = []
+
+        for i, word in enumerate(words):
+            # Check every possible split point in the word
+            for j in range(len(word) + 1):
+                prefix = word[:j]
+                suffix = word[j:]
+
+                # Case 1: Prefix is palindrome, reversed suffix exists
+                if prefix == prefix[::-1]:
+                    rev_suffix = suffix[::-1]
+                    if rev_suffix in word_map and word_map[rev_suffix] != i:
+                        results.append([word_map[rev_suffix], i])
+
+                # Case 2: Suffix is palindrome, reversed prefix exists
+                # (j < len(word) prevents duplicate checks when j=0)
+                if j < len(word) and suffix == suffix[::-1]:
+                    rev_prefix = prefix[::-1]
+                    if rev_prefix in word_map and word_map[rev_prefix] != i:
+                        results.append([i, word_map[rev_prefix]])
+
+        return results
