@@ -1,0 +1,47 @@
+class Solution:
+    def countSmaller(self, nums):
+        n = len(nums)
+        # Store (value, original_index) to track counts correctly
+        enum_nums = list(enumerate(nums))
+        counts = [0] * n
+
+        def merge_sort(arr):
+            if len(arr) <= 1:
+                return arr
+            
+            mid = len(arr) // 2
+            left = merge_sort(arr[:mid])
+            right = merge_sort(arr[mid:])
+            
+            return merge(left, right)
+
+        def merge(left, right):
+            merged = []
+            i = j = 0
+            # Track how many elements from the 'right' side are smaller
+            # than the current element in the 'left' side
+            while i < len(left) and j < len(right):
+                if left[i][1] <= right[j][1]:
+                    # Current left element is <= right element.
+                    # All 'j' elements seen so far from 'right' were smaller.
+                    counts[left[i][0]] += j
+                    merged.append(left[i])
+                    i += 1
+                else:
+                    # Right element is smaller
+                    merged.append(right[j])
+                    j += 1
+            
+            # Clean up remaining elements
+            while i < len(left):
+                counts[left[i][0]] += j
+                merged.append(left[i])
+                i += 1
+            while j < len(right):
+                merged.append(right[j])
+                j += 1
+                
+            return merged
+
+        merge_sort(enum_nums)
+        return counts
