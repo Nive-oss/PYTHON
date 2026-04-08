@@ -1,0 +1,36 @@
+class Solution:
+    def maxNumber(self, nums1, nums2, k):
+        m, n = len(nums1), len(nums2)
+        best = []
+
+        # Find the best sub-sequence of length 'length' from a single list
+        def get_max_subsequence(nums, length):
+            stack = []
+            to_drop = len(nums) - length
+            for num in nums:
+                while to_drop > 0 and stack and stack[-1] < num:
+                    stack.pop()
+                    to_drop -= 1
+                stack.append(num)
+            return stack[:length]
+
+        # Merge two sub-sequences to create the largest possible number
+        def merge(seq1, seq2):
+            res = []
+            while seq1 or seq2:
+                # Python compares lists lexicographically
+                if seq1 > seq2:
+                    res.append(seq1.pop(0))
+                else:
+                    res.append(seq2.pop(0))
+            return res
+
+        # Try all valid splits between nums1 and nums2
+        for i in range(max(0, k - n), min(k, m) + 1):
+            s1 = get_max_subsequence(nums1, i)
+            s2 = get_max_subsequence(nums2, k - i)
+            candidate = merge(s1, s2)
+            if candidate > best:
+                best = candidate
+                
+        return best
